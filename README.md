@@ -270,6 +270,7 @@ Coverage report will be available at `target/site/jacoco/index.html`
 - first_name
 - last_name
 - role (ADMIN, USER)
+- enabled (boolean)
 - created_at
 - updated_at
 
@@ -294,6 +295,101 @@ Coverage report will be available at `target/site/jacoco/index.html`
 - due_date
 - created_at
 - updated_at
+
+### Teams Table
+- id (UUID, PK)
+- name (unique)
+- description
+- owner_id (FK -> Users)
+- created_at
+- updated_at
+
+### Team Members Table
+- id (UUID, PK)
+- team_id (FK -> Teams)
+- user_id (FK -> Users)
+- role (OWNER, ADMIN, MEMBER, VIEWER)
+- joined_at
+- UNIQUE(team_id, user_id)
+
+### Project Permissions Table
+- id (UUID, PK)
+- project_id (FK -> Projects)
+- team_id (FK -> Teams, optional)
+- user_id (FK -> Users, optional)
+- permission (READ, WRITE, DELETE, ADMIN)
+- granted_by (FK -> Users)
+- granted_at
+- UNIQUE(project_id, team_id, user_id)
+
+### Task Permissions Table
+- id (UUID, PK)
+- task_id (FK -> Tasks)
+- team_id (FK -> Teams, optional)
+- user_id (FK -> Users, optional)
+- permission (READ, WRITE, DELETE, ADMIN)
+- granted_by (FK -> Users)
+- granted_at
+- UNIQUE(task_id, team_id, user_id)
+
+### Subscription Plans Table
+- id (UUID, PK)
+- name (unique)
+- description
+- price (decimal)
+- billing_cycle (MONTHLY, YEARLY)
+- max_projects
+- max_tasks_per_project
+- max_team_members
+- api_access (boolean)
+- priority_support (boolean)
+- advanced_reporting (boolean)
+- file_attachments (boolean)
+- active (boolean)
+- created_at
+- updated_at
+
+### Subscriptions Table
+- id (UUID, PK)
+- user_id (FK -> Users)
+- plan_id (FK -> Subscription Plans)
+- status (TRIAL, ACTIVE, CANCELLED, EXPIRED, SUSPENDED)
+- start_date
+- end_date
+- auto_renew (boolean)
+- razorpay_subscription_id
+- razorpay_customer_id
+- created_at
+- updated_at
+
+### Payments Table
+- id (UUID, PK)
+- user_id (FK -> Users)
+- subscription_id (FK -> Subscriptions)
+- amount (decimal)
+- currency (default: INR)
+- status (PENDING, SUCCESS, FAILED, REFUNDED)
+- payment_method
+- razorpay_order_id
+- razorpay_payment_id
+- razorpay_signature
+- failure_reason
+- created_at
+- paid_at
+
+### Audit Logs Table
+- id (UUID, PK)
+- user_id (FK -> Users)
+- username
+- entity_type (USER, PROJECT, TASK, TEAM, SUBSCRIPTION, etc.)
+- entity_id
+- action (CREATED, UPDATED, DELETED, VIEWED, LOGIN, etc.)
+- description
+- old_value (TEXT)
+- new_value (TEXT)
+- ip_address
+- user_agent
+- timestamp
 
 ## 🔧 Configuration
 

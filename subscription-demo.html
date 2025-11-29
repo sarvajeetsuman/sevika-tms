@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sevika Task Management - Subscription Plans</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .plan-card.recommended {
+            border: 3px solid #667eea;
+        }
+
+        .recommended-badge {
+            position: absolute;
+            top: 15px;
+            right: -30px;
+            background: #667eea;
+            color: white;
+            padding: 5px 40px;
+            transform: rotate(45deg);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .plan-name {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .plan-price {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .plan-price span {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .plan-description {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .plan-features li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+
+        .plan-features li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .subscribe-btn {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .subscribe-btn:hover {
+            background: #5568d3;
+        }
+
+        .subscribe-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .info-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .info-section p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .api-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .api-info code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        #status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        #status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        #status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Choose Your Plan</h1>
+        
+        <div id="status"></div>
+
+        <div class="plans-grid" id="plansGrid">
+            <!-- Plans will be loaded dynamically -->
+        </div>
+
+        <div class="info-section">
+            <h2>🔐 Razorpay Test Mode Integration</h2>
+            <p>This demo uses Razorpay's test mode for secure payment processing. No real charges will be made.</p>
+            
+            <div class="api-info">
+                <h3>Test Card Details:</h3>
+                <p><strong>Card Number:</strong> <code>5267 3181 8797 5449</code></p>
+                <p><strong>Expiry:</strong> <code>Any future date</code></p>
+                <p><strong>CVV:</strong> <code>Any 3 digits</code></p>
+                <p><strong>Name:</strong> <code>Any name</code></p>
+            </div>
+
+            <div class="api-info" style="margin-top: 20px;">
+                <h3>API Endpoints:</h3>
+                <p><code>POST /api/subscriptions</code> - Create subscription</p>
+                <p><code>POST /api/subscriptions/verify-payment</code> - Verify payment</p>
+                <p><code>GET /api/subscriptions/active</code> - Get active subscription</p>
+                <p><code>GET /api/subscription-plans/active</code> - Get all plans</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        // Replace with your API base URL and JWT token
+        const API_BASE_URL = 'http://localhost:8080/api';
+        const JWT_TOKEN = 'YOUR_JWT_TOKEN_HERE'; // Get this from login
+
+        // Load subscription plans
+        async function loadPlans() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/subscription-plans/active`, {
+                    headers: {
+                        'Authorization': `Bearer ${JWT_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load plans');
+                }
+
+                const plans = await response.json();
+                displayPlans(plans);
+            } catch (error) {
+                showStatus('Error loading plans. Please ensure you are logged in.', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        function displayPlans(plans) {
+            const grid = document.getElementById('plansGrid');
+            grid.innerHTML = '';
+
+            plans.forEach((plan, index) => {
+                const isRecommended = plan.name === 'Premium';
+                const card = document.createElement('div');
+                card.className = `plan-card ${isRecommended ? 'recommended' : ''}`;
+                
+                card.innerHTML = `
+                    ${isRecommended ? '<div class="recommended-badge">Recommended</div>' : ''}
+                    <h2 class="plan-name">${plan.name}</h2>
+                    <div class="plan-price">
+                        ₹${plan.price.toFixed(2)}
+                        <span>/${plan.billingCycle === 'MONTHLY' ? 'month' : 'year'}</span>
+                    </div>
+                    <p class="plan-description">${plan.description || ''}</p>
+                    <ul class="plan-features">
+                        <li>${plan.maxProjects === -1 ? 'Unlimited' : plan.maxProjects} Projects</li>
+                        <li>${plan.maxTasksPerProject === -1 ? 'Unlimited' : plan.maxTasksPerProject} Tasks per Project</li>
+                        <li>${plan.maxTeamMembers === -1 ? 'Unlimited' : plan.maxTeamMembers} Team Members</li>
+                        ${plan.fileAttachments ? '<li>File Attachments</li>' : ''}
+                        ${plan.advancedReporting ? '<li>Advanced Reporting</li>' : ''}
+                        ${plan.prioritySupport ? '<li>Priority Support</li>' : ''}
+                        ${plan.apiAccess ? '<li>API Access</li>' : ''}
+                    </ul>
+                    <button class="subscribe-btn" onclick="subscribeToPlan('${plan.id}')">
+                        ${plan.price === 0 ? 'Start Free Trial' : 'Subscribe Now'}
+                    </button>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        async function subscribeToPlan(planId) {
+            try {
+                showStatus('Processing...', 'info');
+
+                // Create subscription
+                const response = await fetch(`${API_BASE_URL}/subscriptions`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${JWT_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        planId: planId,
+                        autoRenew: true
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create subscription');
+                }
+
+                const orderData = await response.json();
+
+                // Open Razorpay checkout
+                openRazorpayCheckout(orderData);
+            } catch (error) {
+                showStatus('Error creating subscription: ' + error.message, 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        function openRazorpayCheckout(orderData) {
+            const options = {
+                key: orderData.key,
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: orderData.name,
+                description: orderData.description,
+                order_id: orderData.orderId,
+                prefill: {
+                    name: orderData.prefillName,
+                    email: orderData.prefillEmail
+                },
+                theme: {
+                    color: '#667eea'
+                },
+                handler: function (response) {
+                    verifyPayment(orderData.subscriptionId, response);
+                },
+                modal: {
+                    ondismiss: function() {
+                        showStatus('Payment cancelled', 'error');
+                    }
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
+
+        async function verifyPayment(subscriptionId, response) {
+            try {
+                showStatus('Verifying payment...', 'info');
+
+                const verifyResponse = await fetch(`${API_BASE_URL}/subscriptions/verify-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${JWT_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        subscriptionId: subscriptionId,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpaySignature: response.razorpay_signature
+                    })
+                });
+
+                if (!verifyResponse.ok) {
+                    throw new Error('Payment verification failed');
+                }
+
+                const subscription = await verifyResponse.json();
+                showStatus('🎉 Payment successful! Your subscription is now active.', 'success');
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } catch (error) {
+                showStatus('Error verifying payment: ' + error.message, 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+        }
+
+        // Load plans on page load
+        loadPlans();
+    </script>
+</body>
+</html>
